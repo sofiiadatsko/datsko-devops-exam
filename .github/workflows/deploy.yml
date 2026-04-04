@@ -25,7 +25,6 @@ jobs:
       - name: Build and push
         run: |
           TAG=${GITHUB_REF_NAME}
-          # Тепер знову використовуємо крапку (контекст кореня)
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/app:$TAG .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/app:$TAG
 
