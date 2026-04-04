@@ -1,41 +1,60 @@
 name: Terraform CI/CD
-on: [push]
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+# Вимикаємо попередження про застарілий Node.js
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   terraform:
+    name: 'Terraform Build & Deploy'
     runs-on: ubuntu-latest
+    
     env:
-      # Змінні для провайдера DigitalOcean
+      # Змінні для підключення до DigitalOcean
       TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
       TF_VAR_ssh_key_fingerprint: ${{ secrets.SSH_KEY_ID }}
       
-      # Змінні для доступу до Backend (Spaces)
+      # Змінні для S3-Backend (DigitalOcean Spaces)
       AWS_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.SPACES_SECRET_KEY }}
-      
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4 # Оновлено до v4
 
+    steps:
+      # 1. Копіюємо код із репозиторію
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Встановлюємо Terraform
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3 # Оновлено до v3
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
 
+      # 3. Ініціалізація (підключення до Бакета/Spaces)
       - name: Terraform Init
+        id: init
         run: |
           cd task1
           terraform init
+        # Якщо тут помилка — перевір назву бакета в main.tf та SPACES ключі
 
-      - name: Terraform Plan (Перевірка)
+      # 4. Перевірка конфігурації (Terraform Plan)
+      - name: Terraform Plan
         id: plan
         run: |
           cd task1
-          terraform plan -out=tfplan
-        # Якщо план не вдасться, CI/CD зупиниться тут (вимога завдання)
+          terraform plan -no-color -out=tfplan
+        continue-on-error: false
+        # Це виконання умови: якщо перевірка не успішна, конвеєр зупиняється
 
+      # 5. Реальне розгортання (тільки для гілки main)
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           cd task1
           terraform apply -auto-approve tfplan
