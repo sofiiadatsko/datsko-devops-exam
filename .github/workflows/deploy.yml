@@ -26,8 +26,8 @@ jobs:
         run: |
           # Отримуємо чисте ім'я гілки або тегу (наприклад, develop або 1.0.0)
           TAG=${GITHUB_REF_NAME}
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/app:$TAG .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:$TAG
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/app:$TAG .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/app:$TAG
 
       # 3. Розгортання через SSH
       - name: Deploy to Minikube via SSH
