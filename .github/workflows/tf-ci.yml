@@ -1,0 +1,24 @@
+name: Terraform CI/CD
+on: [push]
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    env:
+      TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
+      TF_VAR_ssh_key_fingerprint: ${{ secrets.SSH_KEY_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.SPACES_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+      - name: Terraform Init & Plan
+        run: |
+          cd task1
+          terraform init
+          terraform plan -out=tfplan
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd task1
+          terraform apply -auto-approve tfplan
