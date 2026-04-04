@@ -21,12 +21,12 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 2. Збірка та Пуш (TAG = develop або 1.0.0)
+      # 2. Збірка та Пуш
       - name: Build and push
         run: |
-          # Отримуємо чисте ім'я гілки або тегу (наприклад, develop або 1.0.0)
           TAG=${GITHUB_REF_NAME}
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/app:$TAG .
+          # Додаємо "task3" перед крапкою, щоб Docker знав, де шукати Dockerfile
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/app:$TAG ./task3
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/app:$TAG
 
       # 3. Розгортання через SSH
