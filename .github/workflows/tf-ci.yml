@@ -1,9 +1,7 @@
 name: Terraform CI/CD
-
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # Це дозволить тобі запустити його вручну кнопкою
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -11,12 +9,6 @@ env:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    env:
-      TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
-      TF_VAR_ssh_key_fingerprint: ${{ secrets.SSH_KEY_ID }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.SPACES_SECRET_KEY }}
-    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -27,17 +19,27 @@ jobs:
           terraform_wrapper: false
 
       - name: Terraform Init
-        run: |
-          cd task1
-          terraform init
+        working-directory: ./task1
+        run: terraform init
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SPACES_SECRET_KEY }}
 
       - name: Terraform Plan
-        run: |
-          cd task1
-          terraform plan -out=tfplan
+        working-directory: ./task1
+        run: terraform plan -out=tfplan
+        env:
+          TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
+          TF_VAR_ssh_key_fingerprint: ${{ secrets.SSH_KEY_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SPACES_SECRET_KEY }}
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
-        run: |
-          cd task1
-          terraform apply -auto-approve tfplan
+        working-directory: ./task1
+        run: terraform apply -auto-approve tfplan
+        env:
+          TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
+          TF_VAR_ssh_key_fingerprint: ${{ secrets.SSH_KEY_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SPACES_SECRET_KEY }}
