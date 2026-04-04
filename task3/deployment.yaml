@@ -17,7 +17,7 @@ spec:
       - name: app
         image: sofiiadatsko/app:{{ tag }}
         ports:
-        - containerPort: 8080
+        - containerPort: 8000 # Django працює тут
 ---
 apiVersion: v1
 kind: Service
@@ -25,11 +25,10 @@ metadata:
   name: app-service
   namespace: {{ namespace }}
 spec:
-  type: NodePort
+  # Прибрали NodePort, лишаємо ClusterIP за замовчуванням
   selector:
     app: datsko-web
   ports:
-  - port: 80
-    targetPort: 8080
-    # Цей порт (8002 або 8003) підставить GitHub Actions
-    nodePort: {{ port }}
+  - protocol: TCP
+    port: 80
+    targetPort: 8000 # Направляємо на порт застосунку
