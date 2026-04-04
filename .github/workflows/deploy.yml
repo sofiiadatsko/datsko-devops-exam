@@ -61,4 +61,4 @@ jobs:
             kubectl apply -f deployment.yaml
             
             # СТАТУС РОЗГОРТАННЯ
-            kubectl rollout status deployment/app-datsko -n $NAMESPACE --timeout=60s
+            kubectl rollout status deployment/app-datsko -n $NAMESPACE --timeout=60s 
