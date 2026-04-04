@@ -17,7 +17,7 @@ spec:
       - name: app
         image: sofiiadatsko/app:{{ tag }}
         ports:
-        - containerPort: 80
+        - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -30,6 +30,6 @@ spec:
     app: datsko-web
   ports:
   - port: 80
-    targetPort: 80
+    targetPort: 8080
     # Цей порт (8002 або 8003) підставить GitHub Actions
     nodePort: {{ port }}
