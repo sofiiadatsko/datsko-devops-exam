@@ -1,1 +1,20 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Update apt and install dependencies
+      apt:
+        update_cache: yes
+        name: [apt-transport-https, ca-certificates, curl, software-properties-common, docker.io]
+        state: present
 
+    - name: Install Minikube
+      shell: |
+        curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        install minikube /usr/local/bin/
+
+    - name: Start Minikube
+      shell: minikube start --driver=docker --force
+      become_user: root
+
+    - name: Install Helm
+      shell: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
