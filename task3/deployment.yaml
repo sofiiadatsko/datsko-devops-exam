@@ -16,6 +16,7 @@ spec:
       containers:
       - name: app
         image: sofiiadatsko/app:{{ tag }}
+        imagePullPolicy: Always
         ports:
         - containerPort: 8000 # Django працює тут
 ---
