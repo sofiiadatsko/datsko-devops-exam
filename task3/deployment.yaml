@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-datsko
+  namespace: {{ namespace }}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: datsko-web
+  template:
+    metadata:
+      labels:
+        app: datsko-web
+    spec:
+      containers:
+      - name: app
+        image: sofiiadatsko/app:{{ tag }}
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  namespace: {{ namespace }}
+spec:
+  type: NodePort
+  selector:
+    app: datsko-web
+  ports:
+  - port: 80
+    targetPort: 80
+    # Цей порт (8002 або 8003) підставить GitHub Actions
+    nodePort: {{ port }}
