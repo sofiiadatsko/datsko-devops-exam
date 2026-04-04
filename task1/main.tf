@@ -28,7 +28,7 @@ provider "digitalocean" {
 resource "digitalocean_vpc" "datsko_vpc" {
   name     = "datsko-vpc"
   region   = "fra1"
-  ip_range = "10.10.10.0/24"
+  ip_range = "10.10.11.0/24"
 }
 
 # 2. Налаштування Фаєрволу
