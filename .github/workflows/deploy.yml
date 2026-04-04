@@ -4,27 +4,32 @@ on:
     branches: [ develop ]
     tags: [ '1.0.0' ]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       # 1. Логін в Docker Hub
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      # 2. Збірка образу (автоматично визначає тег: develop або 1.0.0)
+      # 2. Збірка та Пуш (TAG = develop або 1.0.0)
       - name: Build and push
         run: |
+          # Отримуємо чисте ім'я гілки або тегу (наприклад, develop або 1.0.0)
           TAG=${GITHUB_REF_NAME}
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/app:$TAG .
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/app:$TAG
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/app:$TAG .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:$TAG
 
-      # 3. Розгортання через SSH на твою ВМ
+      # 3. Розгортання через SSH
       - name: Deploy to Minikube via SSH
         uses: appleboy/ssh-action@master
         with:
@@ -32,16 +37,28 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Створення namespace (якщо немає)
+            # Визначаємо змінні на основі того, що прийшло з GitHub
+            TAG=${{ github.ref_name }}
             NAMESPACE=${{ github.ref_type == 'tag' && 'release' || 'dev' }}
             PORT=${{ github.ref_type == 'tag' && '8003' || '8002' }}
             
-            kubectl create namespace $NAMESPACE || true
+            # Створюємо namespace, якщо його немає
+            kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
             
-            # Оновлення маніфесту (заміна змінних) та запуск
-            curl -O https://raw.githubusercontent.com/${{ github.repository }}/main/task3/deployment.yaml
+            # Отримуємо файл маніфесту (заміни 'main' на свою поточну гілку, якщо треба)
+            # Або краще: просто скопіюй його зміст через cat, якщо файл невеликий
+            curl -s https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/task3/deployment.yaml -o deployment.yaml
+            
+            # ЗАМІНА ЗМІННИХ (sed)
             sed -i "s/{{ namespace }}/$NAMESPACE/g" deployment.yaml
             sed -i "s/{{ tag }}/$TAG/g" deployment.yaml
             sed -i "s/{{ port }}/$PORT/g" deployment.yaml
             
+            # ПЕРЕВІРКА ПЕРЕД РОЗГОРТАННЯМ (Requirement: Dry-run)
+            kubectl apply -f deployment.yaml --dry-run=client
+            
+            # РЕАЛЬНЕ РОЗГОРТАННЯ
             kubectl apply -f deployment.yaml
+            
+            # СТАТУС РОЗГОРТАННЯ
+            kubectl rollout status deployment/app-datsko -n $NAMESPACE --timeout=60s
