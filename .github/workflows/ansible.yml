@@ -1,0 +1,28 @@
+name: Ansible Deploy
+on: [push]
+
+jobs:
+  ansible-task:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Ansible
+        run: sudo apt-get install -y ansible
+
+      # ПЕРЕВІРКА (Syntax Check)
+      - name: Ansible Syntax Check
+        run: |
+          cd task2
+          ansible-playbook playbook.yml --syntax-check
+
+      # ВИКОРИСТАННЯ СЕКРЕТУ (Розгортання)
+      - name: Run Playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+          # Тут ansible підключиться до ВМ, яку створив Terraform
+          ansible-playbook -i "${{ secrets.VM_IP }}," -u root --private-key private_key.pem task2/playbook.yml
