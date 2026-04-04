@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: app-datsko
   namespace: {{ namespace }}
-spec:
+spec: 
   replicas: 2
   selector:
     matchLabels:
