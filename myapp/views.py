@@ -5,4 +5,4 @@ from django.shortcuts import render
 from django.http import HttpResponse
 
 def hello_world(request):
-    return HttpResponse('Hello, World! 1.0.0')
+    return HttpResponse('Hello, World! Develop')
