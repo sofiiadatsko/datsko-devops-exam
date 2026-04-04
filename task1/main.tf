@@ -57,3 +57,6 @@ resource "digitalocean_droplet" "datsko_node" {
   vpc_uuid = digitalocean_vpc.datsko_vpc.id
   ssh_keys = [var.ssh_key_fingerprint]
 }
+
+variable "do_token" {}
+variable "ssh_key_fingerprint" {}
