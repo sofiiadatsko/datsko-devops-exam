@@ -1,22 +1,39 @@
 name: Terraform CI/CD
 on: [push]
+
 jobs:
   terraform:
     runs-on: ubuntu-latest
     env:
+      # Змінні для провайдера DigitalOcean
       TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
       TF_VAR_ssh_key_fingerprint: ${{ secrets.SSH_KEY_ID }}
+      
+      # Змінні для доступу до Backend (Spaces)
       AWS_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.SPACES_SECRET_KEY }}
+      
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4 # Оновлено до v4
+
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-      - name: Terraform Init & Plan
+        uses: hashicorp/setup-terraform@v3 # Оновлено до v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
         run: |
           cd task1
           terraform init
+
+      - name: Terraform Plan (Перевірка)
+        id: plan
+        run: |
+          cd task1
           terraform plan -out=tfplan
+        # Якщо план не вдасться, CI/CD зупиниться тут (вимога завдання)
+
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
         run: |
